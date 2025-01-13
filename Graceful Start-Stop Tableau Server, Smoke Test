@@ -1,0 +1,91 @@
+Issue/Problem Description:
+--------------------------
+Gracefully stop & start the Tableau server.
+
+Environment:
+------------
+Tableau Server
+
+Details:
+--------
+As a best practice, you should always stop the Tableau server before you stop or restart the computer it is running on. 
+Shutting down the computer while Tableau is running may result in unexpected results.
+
+Steps to stop and start the Tableau server gracefully:
+------------------------------------------------------
+•	From TSM Web UI:
+This can be done from TSM web UI by selecting 
+“Stop Tableau server or Start Tableau server”
+
+•	Command line: 
+  tsm stop 	> Stop the Tableau Server
+  tsm start 	> Start the Tableau Server
+  tsm status -v 	> check the status of Tableau process
+
+•	Some TSM processes will continue to run, even after you stop Tableau Server. 
+This is normal, and you can go ahead and stop your computer. The running services are designed to shut themselves off when the computer is stopped.
+
+•	TSM processes that run, even when Tableau Server is stopped include: 
+(All of these processes are part of systemd)
+
+o	Administration Agent
+o	Administration Controller
+o	Client File Service
+o	Coordination Service (based on Apache Zookeeper™)
+o	Service Manager
+o	Licensing Service
+
+Start and stop administrative services from Command line:
+
+cd /opt/tableau/tableau-server/packages/scripts.20221.23.0112.0409/
+. /stop-administrative-services
+. / start-administrative-services
+
+
+Using Systemd to Start and Stop Tableau Server (tsm start/stop):
+----------------------------------------------------------------
+1.	The Tableau Administration Controller (Administrative process) manages the tsm commands and tsm web UI and as an administrative process it designs to
+    automatically restart it is stop.
+2.	To run the tsm commands the above administrative services (specially the Administration Controller) should be up and running.
+
+Command to check the status of Administration controller:
+sudo su -l tableau -c “systemctl –user restart tabadmincontroller_0.service”
+
+3.	TSM administrative services start automatically on system reboot as they were the part of systemd, we should not add the tsm command to systemd as they
+    are dependent on administrative services.
+
+
+Note: 
+1. Tableau maintains the Server state previous reboot of system and maintain the same. E.g. If Tableau server is running before reboot, it will start automatically post the reboot and if it is in stop state before reboot, it will be in stop state post reboot.
+2. Most of the KB article suggesting to manually stopping the Tableau server before the system reboot and start it post the reboot.  
+
+
+Smoke Test:
+-----------
+Before the maintenance window starts, perform the below checks, and validate the same post the maintenance window completed as part of basic smoke test.
+
+1. Log in to the front-end Web-UI to confirm that the login process works 
+login to Tableau server and TSM Web-UI and verify the login
+
+2. User count, all sites
+Tableau server Web-UI > All sites > Users 
+
+3. Select a small subset of sites for which to check permissions
+Tableau server Web-UI >Explore > Top level projects > Select any project > … > Permissions
+
+4. Select a small subset of users for whom to check licensed roles and group membership
+Tableau server Web-UI >Select any site > Users
+Tableau server Web-UI >Select any site > Groups
+
+5. Run tsm status to ensure the tsm cli works
+tsm -help
+tsm -version
+
+5. Record the count of each process that has more than one, such as backgrounders
+tsm status -v // This will update the status of all the running processes
+Tableau server Web-UI > All sites > Server status
+
+6. Record a list of all license keys that are applied to the server
+tsm licenses list
+Tableau server Web-UI > All sites > settings > Licenses
+
