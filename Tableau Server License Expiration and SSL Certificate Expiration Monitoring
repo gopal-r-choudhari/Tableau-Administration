@@ -1,0 +1,91 @@
+#Description: This script will monitor the Tableau Server licese expiry in next 90 days and the SSL Certificate expiry.
+
+
+#!/bin/bash
+today=$( date +%m/%d/%y)
+#echo $today
+threshold=90
+notify=1
+logfile=/app/script/licensemonLogs.txt
+FILE=/app/script/emailbody
+echo -e "\n\n*** Script execution starts at: $(date)" >>$logfile
+
+source /etc/profile.d/tableau_server.sh
+#tsm status
+tsm licenses list | awk '{ print $1" "$8}' > tempfile.txt
+
+echo -e "Hello Team," > $FILE
+echo -e "This is Production Tableau Server Monitoring Alert." >> $FILE
+echo -e "\n1. Tableau Server License Key Expiration Status:\n- Please find the below Tableau Production server license(s) expire in next $threshold day(s):" >> $FILE
+echo -e "\n KEY's \t \t \t \t License Expiry" >>$FILE
+
+tail -n +4 tempfile.txt | while read line
+do
+        key=$(echo $line | awk '{ print $1}')
+        edate=$(echo $line | awk '{ print $2}')
+        #echo "Key= $key"
+        #echo "Expiration Date= $edatevar"
+        #echo $line
+        ts1=$(date -d "$edate" +%s)
+        #echo $ts1
+        ts2=$(date -d "$today" +%s)
+        #echo $ts2
+        diff=$((ts1-ts2))
+        diff_day=$((diff/86400))
+        #echo "Diff is $diff_day days"
+        if [ $threshold -gt $diff_day ];
+        then
+                #echo "Check validity of Licenses $threshold"
+                notify=$(( $notify + 1 ))
+                echo "from if : $notify"
+                echo -e "$key \t $edate" >>$logfile
+                echo -e "$key \t $edate" >>$FILE
+                echo -e "true" >>$logfile
+        else
+                echo "from else :$notify"
+                #continue
+        fi
+        #break
+done
+
+#Monitor the SSL Certificate expiration
+##########################################################################################################################################################################################
+echo -n | openssl s_client -servername "servername" -connect "servername":443 2>/dev/null | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' >/app/scripts/tmplogfile
+datevar=$(openssl x509 -in /app/scripts/tmplogfile -enddate -noout | sed "s/.*=\(.*\)/\1/")
+date_s=$(date -d "${datevar}" +%s)
+now_s=$(date -d now +%s)
+date_diff=$(( (date_s - now_s) / 86400 ))
+MAX_DAYS=30
+MIN_DAYS=1
+SSL_MSG=""
+#echo $date_diff
+if [[ $date_diff -lt $MAX_DAYS && $date_diff -gt $MIN_DAYS ]];
+then
+    SSL_MSG="\n\n2. SSL Certificate Expiration Status:\n- SSL certificate will expire in $date_diff days\n"
+elif [ $date_diff -lt 0 ];
+then
+    SSL_MSG="\n\n2. SSL Certificate Expiration Status:\n- SSL certificate is expired, Please take necessory action.\n"
+else
+    SSL_MSG="\n\n2. SSL Certicate Expiration Status:\n- SSL certificate  will expire in $date_diff days, We are good now.\n"
+fi
+##########################################################################################################################################################################################
+#Email send status with checks
+##########################################################################################################################################################################################
+
+sendmail=$( tail -n 1 $logfile)
+if [ "$sendmail" = "true" ];
+then
+        echo "check license validity"
+        echo -e $SSL_MSG >>$FILE
+        echo -e "\n Thank you..!" >>$FILE
+        /usr/bin/mail -s "Tableau-PRODUCTION-Server Monitoring Alert..!" -S from=DLTableauAdmins@testurl.com grc@testurl.com < /scripts/emailbody
+else
+        echo "All good"
+        echo -e "Hello Team," > $FILE
+        echo -e "This is Tableau Production Server (edetb0rabpr101.upc) Monitoring Alert." >> $FILE
+        echo -e "\n1. Tableau Server License Key Expiration Status:\n- Please note, none of the license key(s) are going to expire in next $threshold day(s):" >> $FILE
+        echo -e $SSL_MSG >>$FILE
+        echo -e "\n Thank you..!" >>$FILE
+        /usr/bin/mail -s "Tableau-PRODUCTION-Server Monitoring Alert..!" -S from=DLTableauAdmins@testurl.com grc@testurl.com < /scripts/emailbody
+fi
+#script ends here.
