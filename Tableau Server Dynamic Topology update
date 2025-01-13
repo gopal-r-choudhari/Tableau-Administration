@@ -1,0 +1,12 @@
+#!/bin/bash/
+source /etc/profile.d/tableau_server.sh
+# Update to process count post increse in instacne size
+tsm topology set-process -n node1 -pr vizqlserver -c 8
+tsm topology set-process -n node2 -pr vizqlserver -c 8
+
+tsm topology set-process -n node3 -pr backgrounder -c 4
+tsm topology set-process -n node4 -pr backgrounder -c 4
+
+tsm pending-changes apply
+echo $(date '+%Y-%m-%d %H:%M:%S') "background processes set to 4 and vizql to 8 count on respective node"
+~                 
