@@ -1,0 +1,25 @@
+#!/bin/bash
+today=$(date +"%Y-%m-%d")
+echo -e "****************************************************"
+echo -e "Script Execution starts: $(date)"
+source /etc/profile.d/tableau_server.sh
+
+#Clear older log than 15 days
+tsm maintenance cleanup -l --log-files-retention 15
+echo -e $(date '+%Y-%m-%d %H:%M:%S') "logs files retention completed"
+
+echo -e $(date '+%Y-%m-%d %H:%M:%S') "Backingup tsm data"
+tsm maintenance backup -f prodbackup.tsbak -d --override-disk-space-check -po
+echo -e $(date '+%Y-%m-%d %H:%M:%S') "Backup tsm data completed\n"
+cd /var/opt/tableau/tableau_server/data/tabsvc/files/backups/
+mv *.tsbak /var/opt/Tableau_Temp_Backup/
+cd /var/opt/Tableau_Temp_Backup ; find -type f -name '*.tsbak' -mtime +1 -exec rm {} \;
+echo -e $(date '+%Y-%m-%d %H:%M:%S') "Backup file move completed"
+
+tsm settings export -f prod-${today}.json
+
+#Moving the backup to S3 Bucket
+#Make sure you have configure the AWS Cli
+/usr/local/bin/aws s3 mv /var/opt/Tableau_Temp_Backup/ s3://s3_Bucket_Name/Tableau_Backup/ --recursive
+#/usr/local/bin/aws s3 ls s3://s3_Bucket_Name/Tableau_Backup/
+echo -e "script end: $(date)\n"
