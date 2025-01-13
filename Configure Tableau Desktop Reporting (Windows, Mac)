@@ -1,0 +1,42 @@
+Configure Tableau Desktop for reporting
+---------------------------------------
+During installation or reinstallation (Windows only)
+----------------------------------------------------
+•	The following command installs Tableau Desktop and configures it to report to Production Tableau Server
+tableau-setup-std-x64.exe /quiet ACCEPTEULA=1 SCHEDULEREPORTINTERVAL=14400 REPORTINGSERVER="https://tableau.server.com"
+
+Enable Tableau Desktop reporting after installation
+•	As an administrator on the computer running Tableau Desktop, make a backup of the registry file before you make any changes to it.
+•	Open the Registry Editor and expand HKEY_LOCAL_MACHINE\SOFTWARE\Tableau. Then edit the registry to create a new key named ReportingServer with these values:
+o	Name: server
+o	Data: https://tableau.server.com
+o	Name: ScheduleReportInterval 
+o	Data: 14400 
+•	Restart Tableau so the changes take effect.
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+Configure Desktop for reporting – Mac 
+--------------------------------------
+Update the .plist file from the /Library/Preferences
+•	Make a backup of the .plist file before you make any changes to it.
+•	Make the /Library/Preferences location visible by running the following command:
+defaults write com.apple.finder AppleShowAllFiles YES
+
+•	Create a com.tableau.ReportingServer.plist file in /Library/Preferences with a Server key set to the address of the server you want the Tableau Desktop instance
+to report to, and a scheduleReportInterval key set to the frequency in seconds that Tableau Desktop should report to the servers.
+
+A .plist file that's configured to send information to Tableau servers as below:
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Server</key>
+    <string>https://tableau.server.com</string>
+    <key>scheduleReportInterval</key>
+    <string>14400</string>
+  </dict>
+</plist>
+
+•	Restart Tableau so the changes take effect.
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+Ref: https://help.tableau.com/current/desktopdeploy/en-us/desktop_deploy_reporting_admin.htm#enable
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
