@@ -1,0 +1,62 @@
+LOGSHARK FOR TABLEAU LOG ANALYSIS AND REPORTING
+-------------------------------------------------
+
+LogShark is a tool you can use to analyze and troubleshoot Tableau performance and activity. LogShark extracts data from Tableau Server and Tableau Desktop log files and builds workbooks that can help you identify and understand error conditions, performance bottlenecks, and background activity.
+
+Installation/ System Requirements:
+----------------------------------
+•	A computer running a 64-bit version of Windows (2008 R2 or later)
+•	For installing the Logshark on Linux requires .NET Core 3.1 SDK installed
+•	Please note that Logshark generates Tableau workbooks and to view them, you will need to have access to a machine with Tableau Desktop version 10.5 (or later) or Tableau Online.
+
+Tableau Log Requirements:
+--------------------------
+USING TSM You can create these archive files using Tableau Services Manager (TSM) web interface or TSM CLI “tsm maintenance ziplogs” command on the Tableau Server. For more information about gathering Tableau Server log files using TSM, see Archive Log Files.
+
+Desktop Logs
+-------------
+For Tableau Desktop, the log files are located in the My Tableau Repository directory. The default location is “\Users\username\Documents\My Tableau Repository\Logs”
+
+Download Logshark
+-----------------
+Download and unzip the precompiled self-contained application using the following link:
+https://github.com/tableau/Logshark/releases/download/v4.2.3/LogShark.Win.4.2.3.zip
+
+Run Logshark to Process the Log Files
+--------------------------------------
+1.	Open a Command Prompt window (Windows) or Terminal (mac) as administrator.
+2.	To see the LogShark command options and syntax, run LogShark --help
+3.	Navigate to the directory where you want to output the results
+4.	To process a logset, just run LogShark.exe and specify the path to the Tableau archive and any other option you wish to set.
+LogShark <LogSetLocation> <RunId> [Options]
+5.	All workbooks or other plugin-generated content is saved in a \<LogShark_run_location>\Output\workbooks folder in the directory from where LogShark is run. If the folder doesn’t exist, LogShark creates it.
+
+Logshark Plugins
+----------------
+LogShark available with multiple plugins and the names of the workbooks that the plugin generates.
+To run a specific plugin, specify the name of the plugin with the LogShark --plugins option. To specify more than one plugin, list them separated by a semicolon, no spaces, and enclose the list in quotation marks (“”).
+
+LogShark logs.zip --plugins Apache
+LogShark logs.zip --plugins "Apache;VizqlServer"
+
+Publish Logshark Results to Tableau Server
+
+If you want to publish the workbooks to Tableau Server instead of the default \Output folder, you need to modify the <LogShark_install_location>\Config\LogSharkConfig.json file and use the -p or --publishworkbooks option when you run LogShark. Here is the syntax to use.
+
+LogShark <LogSetLocation> Options -p
+You will need to update the <LogShark_install_location>\Config\LogSharkConfig.json file. Change the <TableauServer> settings to match your Tableau Server configuration.
+
+"TableauServer": {
+    "Url": "<EnterServerUrlHere>",
+    "Site": "<EnterSiteNameHere>",
+    "Username": "<EnterUsernameHere>",
+    "Password": "<EnterPasswordHere>",
+    "Timeout": 240,
+    "GroupsToProvideWithDefaultPermissions": [],
+    "ParentProject": {
+      "Id": "",
+      "Name": ""
+    }
+
+
+Reference: https://tableau.github.io/Logshark/
