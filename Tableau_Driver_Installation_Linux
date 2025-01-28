@@ -1,0 +1,93 @@
+Driver Installation:
+=====================
+1. Snowflake
+-------------
+root@server/app/Tableau_Data/tableau_drivers/Snowflake$ yum install snowflake-odbc-2.24.6.x86_64.rpm
+Last metadata expiration check: 4:07:22 ago on Mon 27 May 2024 09:26:37 AM EDT.
+Dependencies resolved.
+=============================================================================================================================================================================================
+ Package                                   Architecture                      Version                                  Repository                                                        Size
+=============================================================================================================================================================================================
+Installing:
+ snowflake-odbc                            x86_64                            2.24.6-1                                 @commandline                                                      46 M
+Installing dependencies:
+ unixODBC                                  x86_64                            2.3.9-4.el9                              unum-rhel-9-for-x86_64-appstream-rpms                            495 k
+
+Transaction Summary
+=============================================================================================================================================================================================
+Install  2 Packages
+
+Total size: 46 M
+Total download size: 495 k
+Installed size: 169 M
+Is this ok [y/N]: y
+Downloading Packages:
+unixODBC-2.3.9-4.el9.x86_64.rpm                                                                                                                              2.6 MB/s | 495 kB     00:00
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Total                                                                                                                                                        2.6 MB/s | 495 kB     00:00
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Preparing        :                                                                                                                                                                     1/1
+  Installing       : unixODBC-2.3.9-4.el9.x86_64                                                                                                                                         1/2
+  Installing       : snowflake-odbc-2.24.6-1.x86_64                                                                                                                                      2/2
+  Running scriptlet: snowflake-odbc-2.24.6-1.x86_64                                                                                                                                      2/2
+[WARN] SF_ACCOUNT is not set, please manually update the odbc.ini file after installation
+Adding driver info to odbcinst.ini...
+odbcinst: Driver installed. Usage count increased to 1.
+    Target directory is /etc
+Adding connect info to odbc.ini...
+odbcinst: Sections and Entries from stdin have been added to ODBC.INI
+Adding Simba Snowflake ini...
+Creating a symlink /usr/lib64/libodbccr.so.1...
+
+  Verifying        : unixODBC-2.3.9-4.el9.x86_64                                                                                                                                         1/2
+  Verifying        : snowflake-odbc-2.24.6-1.x86_64                                                                                                                                      2/2
+Installed products updated.
+
+Installed:
+  snowflake-odbc-2.24.6-1.x86_64                                                                 unixODBC-2.3.9-4.el9.x86_64
+
+Complete!
+root@server/app/Tableau_Data/tableau_drivers/Snowflake$
+=================================================================
+
+
+2. Tera data
+-------------
+root@server/app/Tableau_Data/tableau_drivers/TeraData$ yum install tdodbc1710-17.10.00.10-1.x86_64.rpm
+Last metadata expiration check: 4:14:22 ago on Mon 27 May 2024 09:26:37 AM EDT.
+Dependencies resolved.
+=============================================================================================================================================================================================
+ Package                                      Architecture                             Version                                          Repository                                      Size
+=============================================================================================================================================================================================
+Installing:
+ tdodbc1710                                   x86_64                                   17.10.00.10-1                                    @commandline                                    25 M
+
+Transaction Summary
+=============================================================================================================================================================================================
+Install  1 Package
+
+Total size: 25 M
+Installed size: 78 M
+Is this ok [y/N]: y
+Downloading Packages:
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Preparing        :                                                                                                                                                                     1/1
+  Running scriptlet: tdodbc1710-17.10.00.10-1.x86_64                                                                                                                                     1/1
+  Installing       : tdodbc1710-17.10.00.10-1.x86_64                                                                                                                                     1/1
+  Running scriptlet: tdodbc1710-17.10.00.10-1.x86_64                                                                                                                                     1/1
+  Verifying        : tdodbc1710-17.10.00.10-1.x86_64                                                                                                                                     1/1
+Installed products updated.
+
+Installed:
+  tdodbc1710-17.10.00.10-1.x86_64
+
+Complete!
+root@server/app/Tableau_Data/tableau_drivers/TeraData$
