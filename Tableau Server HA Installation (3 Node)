@@ -1,0 +1,225 @@
+=======================================================================================================================================
+
+Step 1: Install Tableau Server package and start Tableau Services Manager
+ 
+ 1. Log on as a user with sudo access to the computer where you want to install Tableau Server.
+ 2. Download installer and navigate to the directory where you copied the Tableau Server installation package.
+ 
+ wget https://downloads.tableau.com/
+
+ 3. Use the package manager to install the Tableau Server package.
+ 
+ On RHEL-like distributions, including CentOS, run the following commands:
+ sudo yum update
+ sudo yum install tableau-server-version.x86_64.rpm
+ 
+ 
+ 4. Navigate to the scripts directory:
+ cd /opt/tableau/tableau_server/packages/scripts.version/
+ 
+ 5. Run the following script to start TSM:
+ sudo ./initialize-tsm --accepteula
+ 
+ The -d flag to specify a non-default location of the "data directory".
+ By default, Tableau Server uses the following location for the directory:
+ /var/opt/tableau/tableau_server
+ 
+ 6. After initialization is complete, close the terminal session:
+ exit or logout
+ source /etc/profile.d/tableau_server.sh
+ 
+
+Step 2. Firewall configuration
+===================================
+Initial node: Add gateway port (TCP 80) and the tabadmincontroller port (TCP 8850)
+tsm topology list-ports | grep -E"tabadmincontroller"primary | gateway"
+
+Check dynamic port range: typicall range is 8000 to 9000
+tsm configuration get -k ports.range.min
+tsm configuration get -k ports.range.maz
+
+1. Start firewall
+sudo systemctl status firewalld
+sudo systemctl enable firewalld
+sudo systemctl start firewalld
+
+2. Verify that the default zone is a high-security zone, such as public. If it is not, recommend changing it to a high-security zone.
+sudo firewall-cmd --get-default-zone
+
+if change is needed
+sudo firewall-cmd --set-default-zone=public
+
+3. Add ports for the gateway port and the tabadmincontroller port. In the example below we use the default ports (80 and 8850).
+sudo firewall-cmd --permanent --add-port=80/tcp
+sudo firewall-cmd --permanent --add-port=8850/tcp
+
+
+4. Configure the firewall to allow all trafic from the other nodes in cluster.
+sudo firewall-cmd--permanent --add-rich-rule="rule family=ipv4 source address=node2ip/32 port
+port=8000-9000 protocol=tcp accept'
+
+
+5. Reload the firewall and verify the settings.
+sudo firewall-cmd --reload
+sudo firewall-cmd --list-all
+
+Step 3: Activate / Register / Initialize TSM
+Using Web UI
+
+Step 4:  Create the Tableau Server administrator account. Run the following command:
+ tabcmd initialuser --server 'localhost:80' --username 'admin' --password 'password'
+
+Step 5: Install PostgreSQL drivers
+ 
+ 1. Download PostgreSQL drivers  and  Install the drivers on your Tableau Server computer:
+   wget https://downloads.tableau.com/drivers...
+   i. To install the driver, run the following command:
+udo yum install tableau-postgresql-odbc-09.06.0500-1.x86_64.rpm
+  
+Step 6: To validate that the drivers installed, navigate to the Administrative Views in Tableau Server.
+===================================================================================================================================================
+
+
+
+Step 2: Generate bootstrap file on the initial node
+tsm topology nodes get-bootstrap-file --file file.json
+
+scp ./bootstrap.json user@node2IP:~/
+scp ./bootstrap.json user@node3IP:~/
+
+Step 3: Firewall Settings
+Step 3-1: Initial node Firewall settings
+
+ 1. confirm gateway and tabadmincontroller port number(by default 8850)
+
+ tsm topology list-ports | grep -E "tabadmincontroller:primary | gateway"
+
+ 2. Check dynamic port range. typical range is 8000 to 9000.
+
+ tsm configuration get -k ports.range.min
+  tsm configuration get -k ports.range.max
+
+ 3. Start firewalld:
+  sudo systemctl start firewalld
+
+ 4. Verify that the default zone is a high-security zone, such as public.
+ firewall-cmd --get-default-zone
+
+ if change is needed,
+ sudo firewall-cmd --set-default-zone=public
+
+ 5. Add ports for the gateway, tabadmincontroller port and  port range (27000-27010) for  licensing communication between nodes
+
+ sudo firewall-cmd --permanent --add-port=80/tcp
+  sudo firewall-cmd --permanent --add-port=27000-27010/tcp
+
+ 6. Configure the firewall to allow all traffic from the other nodes in the cluster.
+
+ sudo firewall-cmd --permanent --add-rich-rule='rule family=ipv4 source address=node2IP/32 port port=8000-9000 protocol=tcp accept'
+
+ sudo firewall-cmd --permanent --add-rich-rule='rule family=ipv4 source address=node3IP/32 port port=8000-9000 protocol=tcp accept'
+
+ 7. Reload the firewall and verify the settings.
+sudo firewall-cmd --reload
+firewall-cmd --list-all
+
+Step 3-2: additional nodes firewall setting	//optional or specific to environment
+
+ 1. Start firewalld:
+sudo systemctl start firewalld
+
+ 2. Verify that the default zone is a high-security zone, such as public.
+firewall-cmd --get-default-zone
+
+ if change is needed,
+ sudo firewall-cmd --set-default-zone=public
+
+ 3. Configure the firewall to allow gateway and tabadmincontroller access from the other nodes in the cluster.
+
+on node 2:
+==========
+sudo firewall-cmd --permanent --add-rich-rule='rule family=ipv4 source address=node1IP/32 port port=80 protocol=tcp accept'
+sudo firewall-cmd --permanent --add-rich-rule='rule family=ipv4 source address=node1IP/32 port port=8000-9000 protocol=tcp accept'
+
+sudo firewall-cmd --permanent --add-rich-rule='rule family=ipv4 source address=node3IP/32 port port=80 protocol=tcp accept'
+sudo firewall-cmd --permanent --add-rich-rule='rule family=ipv4 source address=node3IP/32 port port=8000-9000 protocol=tcp accept'
+
+on node 3:
+==========
+same rule with node 1 and node 2
+
+4. Reload the firewall and verify the settings.
+sudo firewall-cmd --reload
+firewall-cmd --list-all
+
+Step 4: Install Additional node with bootstrap
+
+sudo yum install tableau-server-version.x86_64.rpm
+
+Step 5: run initialize-tsm script
+
+cd /opt/tableau/tableau_server/packages/scripts.version/
+sudo ./initialize-tsm -b /path/to/bootstrap.json --accepteula -f
+
+Repeat Step4 and 5 on third node.
+
+Step 6: Add process to the additional nodes.
+On initial node,
+# check node name
+tsm topology list-nodes -v
+
+tsm topology set-process -n node2 -pr clustercontroller -c 1
+tsm topology set-process -n node3 -pr clustercontroller -c 1
+tsm pending-changes apply --ignore-warnings
+
+Step 7: deploy coordination service
+tsm stop
+
+##check if there is any pending list.
+tsm pending-changes list
+
+tsm pending-changes discard
+or
+tsm pending-changes apply
+
+#create coordination service
+tsm topology deploy-coordination-service -n node1,node2,node3
+tsm start
+
+Step 8: Configure Client File Service(CFS)
+On initial node
+
+tsm topology set-process -n node2 -pr clientfileservice -c 1
+tsm topology set-process -n node3 -pr clientfileservice -c 1
+
+tsm pending-changes apply
+
+
+Step 9:  Configure process for second node
+
+tsm topology set-process -n node2 -pr gateway -c 1
+tsm topology set-process -n node2 -pr vizqlserver -c 2
+tsm topology set-process -n node2 -pr vizportal -c 2
+tsm topology set-process -n node2 -pr backgrounder -c 2
+tsm topology set-process -n node2 -pr cacheserver -c 2
+tsm topology set-process -n node2 -pr searchserver -c 1
+tsm topology set-process -n node2 -pr dataserver -c 2
+tsm topology set-process -n node2 -pr filestore -c 1
+tsm topology set-process -n node2 -pr pgsql -c 1
+
+tsm pending-changes apply
+
+Step 10: Configure process for third node
+
+tsm topology set-process -n node3 -pr gateway -c 1
+tsm topology set-process -n node3 -pr vizqlserver -c 2
+tsm topology set-process -n node3 -pr vizportal -c 2
+tsm topology set-process -n node3 -pr backgrounder -c 2
+tsm topology set-process -n node3 -pr cacheserver -c 2
+tsm topology set-process -n node3 -pr searchserver -c 1
+tsm topology set-process -n node3 -pr dataserver -c 2
+tsm topology set-process -n node3 -pr filestore -c 1
+
+tsm pending-changes apply
+
+tsm start
