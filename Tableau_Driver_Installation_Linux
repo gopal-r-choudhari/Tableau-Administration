@@ -3,7 +3,7 @@ Driver Installation:
 1. Snowflake
 -------------
 root@server/app/Tableau_Data/tableau_drivers/Snowflake$ yum install snowflake-odbc-2.24.6.x86_64.rpm
-Last metadata expiration check: 4:07:22 ago on Mon 27 May 2024 09:26:37 AM EDT.
+
 Dependencies resolved.
 =============================================================================================================================================================================================
  Package                                   Architecture                      Version                                  Repository                                                        Size
@@ -58,7 +58,7 @@ root@server/app/Tableau_Data/tableau_drivers/Snowflake$
 2. Tera data
 -------------
 root@server/app/Tableau_Data/tableau_drivers/TeraData$ yum install tdodbc1710-17.10.00.10-1.x86_64.rpm
-Last metadata expiration check: 4:14:22 ago on Mon 27 May 2024 09:26:37 AM EDT.
+
 Dependencies resolved.
 =============================================================================================================================================================================================
  Package                                      Architecture                             Version                                          Repository                                      Size
